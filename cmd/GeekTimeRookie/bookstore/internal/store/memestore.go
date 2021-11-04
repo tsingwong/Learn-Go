@@ -3,7 +3,7 @@
  * @Author: Tsingwong
  * @Date: 2021-11-01 11:12:58
  * @LastEditors: Tsingwong
- * @LastEditTime: 2021-11-01 19:34:33
+ * @LastEditTime: 2021-11-03 12:05:40
  */
 package store
 
@@ -22,4 +22,67 @@ func init() {
 type MemStore struct {
 	sync.RWMutex
 	books map[string]*mystore.Book
+}
+
+func (ms *MemStore) Create(book *mystore.Book) error {
+	ms.Lock()
+	defer ms.Unlock()
+
+	if _, ok := ms.books[book.Id]; ok {
+		return mystore.ErrExist
+	}
+	ms.books[book.Id] = &*book
+	return nil
+}
+
+func (ms *MemStore) Update(book *mystore.Book) error {
+	ms.Lock()
+	defer ms.Unlock()
+	oldBook, ok := ms.books[book.Id]
+	if !ok {
+		return mystore.ErrNotFound
+	}
+	nBook := *oldBook
+	if book.Name != "" {
+		nBook.Name = book.Name
+	}
+	if book.Authors != nil {
+		nBook.Authors = book.Authors
+	}
+	if book.Press != "" {
+		nBook.Press = book.Press
+	}
+	ms.books[book.Id] = &nBook
+	return nil
+}
+
+func (ms *MemStore) Get(id string) (mystore.Book, error) {
+	ms.RLock()
+	defer ms.RUnlock()
+
+	t, ok := ms.books[id]
+	if ok {
+		return *t, nil
+	}
+	return mystore.Book{}, mystore.ErrNotFound
+}
+
+func (ms *MemStore) Delete(id string) error {
+	ms.Lock()
+	defer ms.Unlock()
+	if _, ok := ms.books[id]; !ok {
+		return mystore.ErrNotFound
+	}
+	delete(ms.books, id)
+	return nil
+}
+
+func (ms *MemStore) GetAll() ([]mystore.Book, error) {
+	ms.RLock()
+	defer ms.RUnlock()
+	allBooks := make([]mystore.Book, 0, len(ms.books))
+	for _, book := range ms.books {
+		allBooks = append(allBooks, *book)
+	}
+	return allBooks, nil
 }

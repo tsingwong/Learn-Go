@@ -3,9 +3,16 @@
  * @Author: Tsingwong
  * @Date: 2021-11-01 11:13:46
  * @LastEditors: Tsingwong
- * @LastEditTime: 2021-11-01 11:34:38
+ * @LastEditTime: 2021-11-03 11:32:03
  */
 package store
+
+import "errors"
+
+var (
+	ErrNotFound = errors.New("not found")
+	ErrExist    = errors.New("exist")
+)
 
 type Book struct {
 	Id      string   `json:"id"`      // 图书ID
